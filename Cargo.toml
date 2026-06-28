@@ -1,0 +1,30 @@
+[package]
+name = "wakeupllm"
+version = "0.1.0"
+description = "wakeupLLM - Model warmup manager"
+authors = ["you"]
+edition = "2021"
+
+[build-dependencies]
+winres = "0.1"
+
+[dependencies]
+eframe = { version = "0.31", features = ["default"] }
+egui = "0.31"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tray-icon = "0.21"
+image = "0.25"
+once_cell = "1"
+
+[target.'cfg(target_os = "windows")'.dependencies.windows-sys]
+version = "0.60"
+features = [
+    "Win32_UI_WindowsAndMessaging",
+    "Win32_Foundation",
+]
+
+[package.metadata.winres]
+OriginalFilename = "wakeupLLM.exe"
+ProductName = "wakeupLLM"
+FileDescription = "Model warmup manager for llama.cpp"

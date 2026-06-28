@@ -1,0 +1,84 @@
+{
+  "out_port": 8000,
+  "idle_timeout_seconds": 0,
+  "models": [
+    {
+      "id": "my-model",
+      "name": "My Model Display Name",
+      "alias": "mm",
+      "port": 8001,
+      "executable": "llama-server.exe",
+      "arguments": [
+        "--model", "/path/to/models/model.gguf",
+        "--mmproj", "/path/to/models/mmproj.gguf",
+        "--alias", "my-model",
+        "--ctx-size", "32768",
+        "--n-gpu-layers", "999",
+        "--temp", "1.0",
+        "--top-p", "0.95",
+        "--top-k", "20",
+        "--min-p", "0.00",
+        "--flash-attn", "on",
+        "--cache-type-k", "q8_0",
+        "--cache-type-v", "q8_0",
+        "--perf"
+      ],
+      "profiles": [
+        {
+          "name": "creative",
+          "temperature": 1.0,
+          "top_p": 0.95,
+          "presence_penalty": 0.0
+        },
+        {
+          "name": "precise",
+          "temperature": 0.3,
+          "top_p": 0.8,
+          "top_k": 40,
+          "presence_penalty": 1.5
+        }
+      ]
+    },
+    {
+      "id": "my-thinking-model",
+      "name": "Thinking Model",
+      "alias": "think",
+      "port": 8002,
+      "executable": "llama-server.exe",
+      "arguments": [
+        "--model", "/path/to/models/thinking-model.gguf",
+        "--mmproj", "/path/to/models/mmproj.gguf",
+        "--jinja",
+        "--alias", "thinking-model",
+        "--ctx-size", "131072",
+        "--n-gpu-layers", "999",
+        "--n-cpu-moe", "32",
+        "--no-mmap",
+        "--mlock",
+        "--flash-attn", "on",
+        "--threads", "16",
+        "--batch-size", "2048",
+        "--ubatch-size", "512",
+        "--temp", "0.7",
+        "--top-p", "0.8",
+        "--cache-type-k", "q8_0",
+        "--cache-type-v", "q8_0",
+        "--perf"
+      ],
+      "profiles": [
+        {
+          "name": "thinking",
+          "temperature": 0.6,
+          "top_p": 0.95,
+          "presence_penalty": 0.0
+        },
+        {
+          "name": "general",
+          "temperature": 0.7,
+          "top_p": 0.8,
+          "presence_penalty": 1.5
+        }
+      ]
+    }
+  ]
+}
