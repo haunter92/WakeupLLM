@@ -12,13 +12,13 @@ A lightweight GUI proxy that manages multiple `llama-server` instances on demand
 
 **Real throughput on modest hardware.** Measured token generation speeds:
 
-|         Model	     | Cold Start | TPS  |  TTFT |
-|--------------------------|------------|------|-------|
-|gemma-4-E4B (Q4_K_M)	     |   5.9s     | 59.1 |  53ms |
-|gemma4-26B-A4B cerebellum |   16.4s    | 32.2 | 224ms |
-|gemma4-26B-A4B apex	     |   21.5s    | 30.5 | 253ms |
-|Qwen3.6-35B-A3B (APEX)    |   11.3s    | 43.3 | 226ms |
-|Qwen3.6-35B-A3B thinking  |   21.2s    | 43.9 | 226ms |
+|         Model	     | Cold Start | TPS  |  TTFT | Unload |
+|--------------------------|------------|------|-------|--------|
+|gemma-4-E4B (Q4_K_M)	     |   8.2s     | 59.1 |  53ms |  0.4s  |
+|gemma4-26B-A4B cerebellum |   16.4s    | 32.2 | 224ms |  3.0s  |
+|gemma4-26B-A4B apex	     |   21.5s    | 30.5 | 253ms |  3.9s  |
+|Qwen3.6-35B-A3B (APEX)    |   11.3s    | 43.3 | 226ms |  3.3s  |
+|Qwen3.6-35B-A3B thinking  |   21.2s    | 43.9 | 226ms |  3.5s  |
 
 All 4 models run simultaneously, each serving requests independently.
 
@@ -119,6 +119,66 @@ Then restart the app. The new model appears in the GUI.
 
 Other flags (`--flash-attn`, `--cache-type-k`, `--jinja`, etc.) are optional — add as needed.
 
+### Key llama-server flags
+
+|     Flag      |                             Description                          |  
+|---------------|------------------------------------------------------------------|
+| `-ngl N`      | Number of layers to offload to GPU (99 = all)                    |
+| `-fa`         | Flash Attention                                                  |
+| `-c N`        | Context size                                                     |
+| `-ctk TYPE`   | KV cache type for K (`turbo4`, `turbo3_tcq`, `turbo2_tcq`, etc.) |
+| `-ctv TYPE`   | KV cache type for V (same options)                               |
+| `--port PORT` | Listening port                                                   |
+
+### Speculative Decoding
+
+|        Flag        |                                             Description                                                   |
+|--------------------|-----------------------------------------------------------------------------------------------------------|
+| `-md FILE`         | Draft model for speculative decoding                                                                      |
+| `--spec-type TYPE` | Speculative type: `draft-simple`, `draft-eagle3`, `draft-mtp`, `ngram-simple`, `copyspec`, `dflash`, etc. |
+| `--draft-max N`    | Number of draft tokens (default: 16)                                                                      |
+| `-ctkd TYPE`       | KV cache type for draft model K                                                                           |
+| `-ctvd TYPE`       | KV cache type for draft model V                                                                           |
+
+Example with MTP speculative decoding:
+```json
+{
+  "arguments": "-m model.gguf -ngl 99 -fa --spec-type draft-mtp -md draft-mtp.gguf -ctk turbo4 -ctv turbo4 --port {port}"
+}
+```
+
+### Vision + MTP GPU Swap
+
+When VRAM is insufficient for both MTP draft and vision encoder (mmproj):
+```json
+{
+  "arguments": "-m model.gguf -ngl 99 -fa --mmproj mmproj.gguf --spec-type draft-mtp --mmproj-gpu-swap --port {port}"
+}
+```
+
+### Unified KV Cache
+
+Optimized for single-slot servers — unifies KV buffer across all sequences:
+```json
+{
+  "arguments": "-m model.gguf -ngl 99 -fa -kvu --port {port}"
+}
+```
+## TurboQuant KV Cache
+
+`llama-server.exe` is built from [beellama.cpp](https://github.com/Anbeeld/beellama.cpp) — a fork with **Trellis-Coded Quantization (TCQ)** for KV cache compression.
+
+### Available KV Cache Types
+
+|     Type        |  bpv |                       Description                       |
+|-----------------|------|---------------------------------------------------------|
+| `turbo4`        | 4.25 | Lossless, ~3.8x compression, virtually no quality loss  |
+| `turbo3_tcq`    | 3.25 | Best quality at 3-bit, beats FP16 at short context      |
+| `turbo2_tcq`    | 2.25 | Maximum compression, ~7x KV cache compression           |
+| `turbo3`        | 3.25 | Scalar quantization (no TCQ), faster encode             |
+| `turbo2`        | 2.25 | Scalar quantization 2-bit                               |
+| `turbo8`        | 8.25 | 8-bit KV cache (FWHT + uniform grid)                    |
+
 ### Using Profiles
 
 Profiles let you save parameter presets and switch between them in the GUI:
@@ -155,18 +215,6 @@ curl http://127.0.0.1:8000/v1/chat/completions \
   -d '{"model":"my-new-model","messages":[{"role":"user","content":"hello"}]}'
 ```
 
-## Building from Source
-
-**Prerequisites:** [Rust toolchain](https://rustup.rs/) (>=1.77)
-
-```powershell
-.\build.ps1
-```
-
-This builds `wakeupllm.exe` and copies `llama-server.exe` alongside it automatically.
-
-Output: `wakeupllm.exe` + `llama-server.exe` + `model-config.json` in the project root.
-
 ## Distribution
 
 Copy these files to the target machine:
@@ -179,16 +227,14 @@ model-config.json    (your model definitions)
 
 The `executable` field supports both relative paths (resolved from app directory) and absolute paths.
 
-## Test Suite
+### llama-server.exe
 
-```powershell
-python test-models.py                    # test all configured models
-python test-models.py --proxy http://127.0.0.1:8080  # custom proxy
-python test-models.py --discover         # auto-discover from proxy
-```
+Binary is built from [beellama.cpp](https://github.com/Anbeeld/beellama.cpp) with the following options:
+- CUDA backend, PTX virtual arch (universal GPU support)
+- Flash Attention, TurboQuant KV cache
+- UPX compressed (~57 MB)
 
-Results are saved to `test-results/run-*/`.
-
+Requires: [CUDA toolkit](https://developer.nvidia.com/cuda-toolkit) must be installed (cublas64_13.dll, nvcudart_hybrid64.dll).
 ## Troubleshooting
 
 - **Model fails to start**: Check `wakeupllm.log` in `%TEMP%`
