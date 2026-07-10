@@ -1,0 +1,53 @@
+{
+  "models": {
+    "Qwen3.6-APEX-uncensor": {
+      "weights_gb": 17.29109,
+      "n_layers": 40,
+      "per_layer_gb": 0.43227726,
+      "architecture": "qwen35moe",
+      "file_size": 17293088928
+    },
+    "Qwen3.6-APEX-uncensor-nonthink-reasoning": {
+      "weights_gb": 17.29109,
+      "n_layers": 40,
+      "per_layer_gb": 0.43227726,
+      "architecture": "qwen35moe",
+      "file_size": 17293088928
+    },
+    "gemma-4-E4B": {
+      "weights_gb": 5.33329,
+      "n_layers": 40,
+      "per_layer_gb": 0.13333225,
+      "architecture": "gemma4",
+      "file_size": 5335289792
+    },
+    "Qwen3.6-APEX-uncensor-nonthink-general": {
+      "weights_gb": 17.29109,
+      "n_layers": 40,
+      "per_layer_gb": 0.43227726,
+      "architecture": "qwen35moe",
+      "file_size": 17293088928
+    },
+    "Qwen3.6-APEX-uncensor-thinking-coding": {
+      "weights_gb": 17.29109,
+      "n_layers": 40,
+      "per_layer_gb": 0.43227726,
+      "architecture": "qwen35moe",
+      "file_size": 17293088928
+    },
+    "gemma4-26b-cerebellum": {
+      "weights_gb": 11.744182,
+      "n_layers": 40,
+      "per_layer_gb": 0.29360455,
+      "architecture": "gemma4",
+      "file_size": 11746181216
+    },
+    "gemma4-26b-a4b-apex": {
+      "weights_gb": 15.493515,
+      "n_layers": 40,
+      "per_layer_gb": 0.38733786,
+      "architecture": "gemma4",
+      "file_size": 15495514976
+    }
+  }
+}

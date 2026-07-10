@@ -1,0 +1,35 @@
+# Build artifacts
+src-tauri/target/
+wakeupllm.exe
+wakeupllm
+llama-server
+build-llama/
+build/
+
+# User-specific config (edit model-config.example.json then copy)
+model-config.json
+profile-selections.json
+running-models.json
+
+# Test results & logs
+test-results/
+*.log
+backup/
+
+# Python
+__pycache__/
+*.pyc
+
+# Editor
+.vscode/*
+!.vscode/extensions.json
+.idea
+*.sw?
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+
+# OS
+.DS_Store
+Thumbs.db
